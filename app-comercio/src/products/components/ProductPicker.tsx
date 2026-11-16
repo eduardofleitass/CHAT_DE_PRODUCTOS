@@ -1,17 +1,16 @@
 import type { Product } from '../interfaces/product.interface';
 
-// Selector del servicio que se va a ofrecer. Es un <select> nativo:
-// accesible con teclado y sin agregar dependencias.
+// <select> nativo a propósito: accesible con teclado y sin dependencias nuevas.
 export default function ProductPicker({
   products,
   value,
   onChange,
   disabled,
 }: {
-  products: Product[]; // catálogo a mostrar
-  value: string; // id del servicio seleccionado
-  onChange: (id: string) => void; // avisa al padre qué se eligió
-  disabled: boolean; // se bloquea mientras la oferta viaja
+  products: Product[];
+  value: string;
+  onChange: (id: string) => void;
+  disabled: boolean;
 }) {
   return (
     <label className="picker">

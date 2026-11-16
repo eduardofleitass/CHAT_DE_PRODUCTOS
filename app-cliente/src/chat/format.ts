@@ -1,17 +1,17 @@
-const pad = (value: number) => String(value).padStart(2, '0'); // "9" -> "09"
+const pad = (value: number) => String(value).padStart(2, '0');
 
-// hh:mm local, sin Intl (Hermes lo trae a medias)
+// hh:mm local sin Intl: Hermes lo trae a medias en Android.
 export const formatTime = (createdAt: number): string => {
-  const date = new Date(createdAt); // epoch ms -> Date local
+  const date = new Date(createdAt);
 
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}`; // arma "09:05"
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
-// Iniciales del servicio para el monograma cuando la oferta no trae imagen.
+// Iniciales para el monograma de los servicios, que no tienen foto.
 export const initials = (name: string): string =>
   name
-    .split(' ') // separa por palabras
-    .filter(Boolean) // descarta espacios repetidos
-    .slice(0, 2) // solo las dos primeras palabras
-    .map((word) => word[0]?.toUpperCase() ?? '') // primera letra de cada una
-    .join(''); // "Pre venta..." -> "PV"
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? '')
+    .join('');
