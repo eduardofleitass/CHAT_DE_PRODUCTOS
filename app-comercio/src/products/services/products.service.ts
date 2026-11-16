@@ -1,7 +1,4 @@
 import type { Product } from '../interfaces/product.interface';
-
-// Catálogo de servicios de Esmassiva. Está en memoria a propósito:
-// la prueba no pide backend de catálogo, solo que la oferta lleve un producto real.
 export const PRODUCTS: Product[] = [
   {
     id: 'sr-preventa', // clave estable del servicio
