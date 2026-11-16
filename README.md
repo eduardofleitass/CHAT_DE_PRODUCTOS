@@ -188,12 +188,23 @@ duplicar el dato.
 ```
 api/src/orders/{orders.module.ts, controllers/, services/, dto/, interfaces/}
 app-comercio/src/chat/{pages/, components/, services/, interfaces/}
+app-comercio/src/products/{interfaces/, services/, components/}    (catálogo de servicios)
 app-cliente/src/chat/{screens/, components/, services/, interfaces/}
 app-cliente/src/orders/services/       (POST /orders desde el cliente)
 ```
 
 Patrón `src/[entidad]/[componentes]` en las tres piezas: la entidad de la API es `orders`, la de las apps
-es `chat`.
+es `chat` y el comercio suma `products`.
+
+### Catálogo de servicios
+
+El comercio no manda un producto hardcodeado: el catálogo vive en
+`app-comercio/src/products/services/products.service.ts` con los servicios de Esmassiva (pre venta, venta
+outbound con base propia, retención y fidelización, ventas cruzadas y contact center omnicanal). El header del
+chat tiene un selector para elegir cuál se ofrece y el precio se muestra con su periodicidad (`1450 USD / mes`).
+
+Para agregar o cambiar un servicio alcanza con editar `PRODUCTS`: nada más depende de esa lista. La app cliente
+no tiene catálogo, solo recibe el objeto dentro del mensaje.
 
 ---
 
