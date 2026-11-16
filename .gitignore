@@ -6,3 +6,4 @@ dist/
 *.log
 api/orders.json
 .DS_Store
+*.tsbuildinfo

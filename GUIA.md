@@ -87,7 +87,11 @@ tiene que mostrar `Comercio — chat demo-1` y `0 mensajes`.
 
 ---
 
-## 4. Fase 1 — API (`back`)
+## 4. Fase 1 — API (`api`) — HECHA Y VERIFICADA
+
+> El módulo `OrdersModule` ya está escrito, probado con curl real y commiteado (`77452ad`).
+> Leelo entero antes de seguir: es la referencia de cómo se arma un módulo Nest, y en la entrevista
+> te van a preguntar por qué existe el `ValidationPipe`.
 
 Archivos (respetando el patrón):
 
@@ -137,7 +141,12 @@ curl -i -X POST http://127.0.0.1:3000/orders -H "Content-Type: application/json"
 
 ---
 
-## 5. Fase 2 — app-comercio (web)
+## 5. Fase 2 — app-comercio (web) — HECHA Y VERIFICADA
+
+> `chat.service.ts` (4 funciones), `ChatPage`, `MessageBubble` y `ProductOfferCard` ya están escritos y
+> probados en dos pestañas reales: el texto que entra por un lado aparece en el otro sin recargar, y la
+> oferta sale por el botón con estado `Pendiente`. Leé `chat.service.ts` con atención — es el mismo que
+> vas a repetir en la app cliente.
 
 `src/chat/services/chat.service.ts` — cuatro funciones, y la clave es una sola:
 

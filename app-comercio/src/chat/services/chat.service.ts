@@ -1,31 +1,57 @@
+import { onValue, push, ref, update } from 'firebase/database';
+import { db } from '../../config/firebase';
 import type { ChatMessage, Product } from '../interfaces/chat-message.interface';
 
-// FASE 2. Ruta en Firebase: chats/{chatId}/messages/{messageId}
-// Necesitás: onValue, push, ref, update de 'firebase/database' y { db } de '../../config/firebase'.
+// chats/{chatId}/messages/{messageId}
+const messagesRef = (chatId: string) => ref(db, `chats/${chatId}/messages`);
 
-// Devuelve la función de desuscripción (onValue la retorna).
+// Devuelve la desuscripción: si el componente no la usa, StrictMode deja dos listeners.
 export function listenMessages(
-  _chatId: string,
-  _onMessages: (messages: ChatMessage[]) => void,
+  chatId: string,
+  onMessages: (messages: ChatMessage[]) => void,
 ): () => void {
-  throw new Error('listenMessages: pendiente (fase 2)');
+  return onValue(
+    messagesRef(chatId),
+    (snapshot) => {
+      const value = (snapshot.val() ?? {}) as Record<string, Omit<ChatMessage, 'id'>>;
+
+      // el id del mensaje es la key que generó push(), no un campo guardado
+      onMessages(
+        Object.entries(value)
+          .map(([id, message]) => ({ ...message, id }))
+          .sort((a, b) => a.createdAt - b.createdAt),
+      );
+    },
+    (error) => console.error('listenMessages:', error.message),
+  );
 }
 
-// El comercio siempre manda sender: 'comercio'.
-export async function sendTextMessage(_chatId: string, _text: string): Promise<void> {
-  throw new Error('sendTextMessage: pendiente (fase 2)');
+export async function sendTextMessage(chatId: string, text: string): Promise<void> {
+  await push(messagesRef(chatId), {
+    sender: 'comercio',
+    type: 'text',
+    text: text.trim(),
+    createdAt: Date.now(),
+  });
 }
 
-// Devuelve el messageId que generó push().
-export async function sendProductOffer(_chatId: string, _product: Product): Promise<string> {
-  throw new Error('sendProductOffer: pendiente (fase 2)');
+// Devuelve el messageId para poder corregir o cancelar la oferta después.
+export async function sendProductOffer(chatId: string, product: Product): Promise<string> {
+  const created = await push(messagesRef(chatId), {
+    sender: 'comercio',
+    type: 'product_offer',
+    status: 'pending',
+    product,
+    createdAt: Date.now(),
+  });
+
+  return created.key!;
 }
 
-// Solo para corregir o cancelar una oferta pending desde el comercio.
 export async function updateOfferStatus(
-  _chatId: string,
-  _messageId: string,
-  _status: 'accepted' | 'rejected',
+  chatId: string,
+  messageId: string,
+  status: 'accepted' | 'rejected',
 ): Promise<void> {
-  throw new Error('updateOfferStatus: pendiente (fase 2)');
+  await update(ref(db, `chats/${chatId}/messages/${messageId}`), { status });
 }
