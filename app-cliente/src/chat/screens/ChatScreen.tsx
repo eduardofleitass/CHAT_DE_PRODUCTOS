@@ -74,10 +74,9 @@ export default function ChatScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.page}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    // behavior "padding" en las dos plataformas: con edge-to-edge (Expo 54+) Android ya no
+    // redimensiona la ventana al abrir el teclado, así que el composer se empuja a mano
+    <KeyboardAvoidingView style={styles.page} behavior="padding">
       <StatusBar barStyle="dark-content" />
 
       <View style={styles.header}>
@@ -198,7 +197,7 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 20,
     paddingTop: 14,
-    paddingBottom: 22,
+    paddingBottom: 18,
     borderTopWidth: 1,
     borderTopColor: colors.line,
     backgroundColor: colors.surface,
