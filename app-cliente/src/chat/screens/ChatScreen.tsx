@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -21,6 +21,7 @@ import {
   updateOfferStatus,
 } from '../services/chat.service';
 import type { ChatMessage } from '../interfaces/chat-message.interface';
+import { colors } from '../theme';
 
 export default function ChatScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -77,18 +78,32 @@ export default function ChatScreen() {
       style={styles.page}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <StatusBar barStyle="dark-content" />
+
       <View style={styles.header}>
-        <Text style={styles.title}>Cliente — chat {CHAT_ID}</Text>
-        <Text style={styles.subtitle}>{messages.length} mensajes</Text>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>C</Text>
+        </View>
+        <View style={styles.identity}>
+          <Text style={styles.title}>Cliente</Text>
+          <Text style={styles.subtitle}>
+            chat {CHAT_ID} · {messages.length} mensajes
+          </Text>
+        </View>
       </View>
 
       <FlatList
         ref={listRef}
         style={styles.list}
+        contentContainerStyle={styles.listContent}
         data={messages}
         keyExtractor={(item) => item.id}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-        ListEmptyComponent={<Text style={styles.empty}>Todavía no hay mensajes.</Text>}
+        ListEmptyComponent={
+          <Text style={styles.empty}>
+            Todavía no hay mensajes.{'\n'}Cuando el comercio mande una oferta, aparece acá.
+          </Text>
+        }
         renderItem={({ item }) =>
           item.type === 'product_offer' ? (
             <ProductOfferCard
@@ -104,21 +119,21 @@ export default function ChatScreen() {
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <View style={styles.form}>
+      <View style={styles.composer}>
         <TextInput
           style={styles.input}
           value={text}
           onChangeText={setText}
           onSubmitEditing={() => void handleSend()}
           placeholder="Escribí un mensaje..."
+          placeholderTextColor={colors.faint}
           returnKeyType="send"
         />
-        <Pressable style={styles.send} onPress={() => void handleSend()}>
-          {answering ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.sendText}>Enviar</Text>
-          )}
+        <Pressable
+          style={({ pressed }) => [styles.send, (pressed || answering) && styles.sendPressed]}
+          onPress={() => void handleSend()}
+        >
+          <Text style={styles.sendText}>Enviar</Text>
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -126,35 +141,68 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: '#fff', paddingTop: 48 },
-  header: { paddingHorizontal: 16, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#d1d5db' },
-  title: { fontSize: 18, fontWeight: '700' },
-  subtitle: { fontSize: 12, color: '#6b7280' },
-  list: { flex: 1, paddingHorizontal: 16 },
-  empty: { textAlign: 'center', color: '#9ca3af', marginTop: 24 },
-  error: { color: '#b91c1c', paddingHorizontal: 16, paddingVertical: 4 },
-  form: {
+  page: { flex: 1, backgroundColor: colors.surface, paddingTop: 48 },
+  header: {
     flexDirection: 'row',
-    gap: 8,
-    padding: 12,
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.line,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { color: colors.accent, fontWeight: '700', fontSize: 13 },
+  identity: { flex: 1 },
+  title: { fontSize: 15.5, fontWeight: '700', color: colors.text, letterSpacing: -0.2 },
+  subtitle: { fontSize: 12.5, color: colors.muted, marginTop: 2 },
+  list: { flex: 1, backgroundColor: colors.panel },
+  listContent: { padding: 16, gap: 10, flexGrow: 1 },
+  empty: {
+    marginTop: 'auto',
+    marginBottom: 'auto',
+    textAlign: 'center',
+    color: colors.faint,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  error: { color: colors.bad, fontSize: 13, paddingHorizontal: 20, paddingTop: 8 },
+  composer: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 22,
     borderTopWidth: 1,
-    borderTopColor: '#d1d5db',
+    borderTopColor: colors.line,
+    backgroundColor: colors.surface,
   },
   input: {
     flex: 1,
+    height: 44,
+    paddingHorizontal: 18,
+    fontSize: 14.5,
+    color: colors.text,
+    backgroundColor: '#f8f9fb',
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderColor: colors.line,
+    borderRadius: 999,
   },
   send: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
+    height: 44,
     paddingHorizontal: 20,
-    justifyContent: 'center',
+    borderRadius: 999,
+    backgroundColor: colors.accent,
     alignItems: 'center',
-    minWidth: 88,
+    justifyContent: 'center',
   },
-  sendText: { color: '#fff', fontWeight: '700' },
+  sendPressed: { backgroundColor: '#4338ca' },
+  sendText: { color: '#fff', fontWeight: '700', fontSize: 13.5 },
 });
