@@ -1,8 +1,12 @@
-# Chat de productos - prueba técnica
+# Chat de producto - prueba técnica
 
-Chat de producto entre una **app cliente** y una **app comercio**, sincronizado con Firebase Realtime
-Database. El comercio puede mandar una oferta con un producto en cualquier momento; el cliente la aprueba o
-la rechaza. Al aprobarla, el pedido queda guardado en la API.
+Chat entre una **app cliente** y una **app comercio**, sincronizado con Firebase Realtime Database. El comercio
+puede mandar una oferta con un producto en cualquier momento; el cliente la aprueba o la rechaza. Al aprobarla,
+el pedido queda guardado en la API.
+
+El caso de uso es el de **Esmassiva**, empresa de contact center y BPO: lo que se ofrece en el chat son sus
+servicios (pre venta, venta outbound, retención, ventas cruzadas y contact center omnicanal), no bienes físicos.
+En el enunciado y en el código ese objeto se sigue llamando `product`, que es el nombre que fija la prueba.
 
 | Pieza | Stack | Qué hace |
 |---|---|---|
@@ -14,11 +18,32 @@ la rechaza. Al aprobarla, el pedido queda guardado en la API.
 
 ---
 
+## Puesta en marcha
+
+Primero completá lo de la sección [Firebase](#1-firebase-una-sola-vez): sin las credenciales en los `.env` las
+dos apps no arrancan. Después, tres terminales:
+
+```bash
+# terminal 1 - API
+cd api && npm install && npm run start:dev
+
+# terminal 2 - comercio web
+cd app-comercio && npm install && npm run dev
+
+# terminal 3 - cliente móvil
+cd app-cliente && npm install && npm start
+```
+
+Abrí `http://localhost:5173` en el navegador, escaneá el QR del terminal 3 con Expo Go y mandá una oferta desde
+el comercio. Aparece en el teléfono con **Aprobar / Rechazar**.
+
+---
+
 ## Requisitos
 
 - Node 20 o superior (probado con Node 22).
 - Un proyecto de Firebase con **Realtime Database** (plan Spark, gratis, alcanza).
-- Para correr el cliente en el teléfono: [Expo Go](https://expo.dev/go). Sin Android Studio.
+- Para correr el cliente en el teléfono: [Expo Go](https://expo.dev/go), sin Android Studio.
   También corre en el navegador con `npm run web`.
 
 ---
@@ -52,7 +77,8 @@ cd ../app-cliente && cp .env.example .env
 Los `.env` están en `.gitignore`: **no se commitean**. Solo se versionan los `.env.example`.
 
 En la app cliente, `EXPO_PUBLIC_API_BASE` **no puede ser `localhost`** si corrés en un teléfono: para el
-teléfono, `localhost` es el teléfono. Poné la IP LAN de la PC (`ipconfig`).
+teléfono, `localhost` es el teléfono. Poné la IP LAN de la PC (`ipconfig`) y dejá pasar el puerto 3000 en el
+firewall de Windows.
 
 ### Reglas de Realtime Database usadas
 
@@ -68,7 +94,8 @@ teléfono, `localhost` es el teléfono. Poné la IP LAN de la PC (`ipconfig`).
 }
 ```
 
-Abiertas a propósito: es una prueba técnica sin autenticación. En producción irían cerradas por usuario.
+Abiertas a propósito: es una prueba técnica sin autenticación. En producción irían cerradas por usuario y con
+Auth, para que un cliente no pueda leer el chat de otro.
 
 ---
 
@@ -78,7 +105,8 @@ Abiertas a propósito: es una prueba técnica sin autenticación. En producción
 cd api
 npm install
 npm run start:dev        # http://127.0.0.1:3000
-npm test                 # tests de OrdersService (vitest)
+npm test                 # tests de orders.service (vitest)
+npm run test:e2e         # test de arranque del módulo
 ```
 
 Endpoints:
@@ -86,14 +114,14 @@ Endpoints:
 ```bash
 # crear pedido -> 201 { id, status: "created", createdAt, chatId, messageId, product }
 curl -X POST http://127.0.0.1:3000/orders -H "Content-Type: application/json" \
-  -d '{"chatId":"demo-1","messageId":"-Omsg1","product":{"id":"p-101","name":"Bandeja paisa","price":32000,"currency":"COP"}}'
+  -d '{"chatId":"demo-1","messageId":"-Omsg1","product":{"id":"sr-contact","name":"Contact center omnicanal","price":2100,"currency":"USD"}}'
 
 # buscar pedido -> 200, o 404 si no existe
 curl http://127.0.0.1:3000/orders/<id>
 ```
 
-Devuelve **400** si falta `chatId`, falta `product.id`, `product.price` no es numérico o no es mayor que
-cero. La validación la hace `ValidationPipe` con los decoradores de `create-order.dto.ts`; sin el pipe en
+Devuelve **400** si falta `chatId`, falta `product.id`, `product.price` no es numérico o no es mayor que cero.
+La validación la hace el `ValidationPipe` global con los decoradores de `create-order.dto.ts`; sin el pipe en
 `main.ts` esos decoradores no hacen nada.
 
 CORS está habilitado: el comercio (5173) y el cliente llaman desde otro origen.
@@ -112,8 +140,9 @@ npm test                 # tests de chat.service (vitest)
 ```
 
 Escucha `chats/demo-1/messages` en tiempo real, manda texto como `sender: "comercio"` y el botón
-**Enviar oferta** publica un `product_offer` en `status: "pending"`. No tiene botones de respuesta: solo
-muestra el estado de su oferta (`PENDIENTE` / `ACEPTADA` / `RECHAZADA`), que se actualiza sin recargar.
+**Enviar oferta** publica un `product_offer` en `status: "pending"` con el servicio elegido en el selector del
+header. No tiene botones de respuesta: solo muestra el estado de su oferta (`PENDIENTE` / `ACEPTADA` /
+`RECHAZADA`), que se actualiza sin recargar.
 
 ---
 
@@ -123,8 +152,12 @@ muestra el estado de su oferta (`PENDIENTE` / `ACEPTADA` / `RECHAZADA`), que se 
 cd app-cliente
 npm install
 npm start                # QR para Expo Go (misma WiFi que la PC)
-npm run web              # alternativa sin teléfono
+npm run android          # abre en un emulador o dispositivo con adb conectado
+npm run web              # corre en el navegador, en un lienzo de 460px
 ```
+
+`npm run android` necesita un dispositivo conectado por USB con depuración activada, o un emulador encendido.
+Sin SDK de Android instalado, el camino es el QR de `npm start`.
 
 Muestra el chat con `FlatList`, responde ofertas pendientes con **Aprobar / Rechazar** y, al aprobar:
 
@@ -141,17 +174,18 @@ Al rechazar solo actualiza Firebase a `rejected`, sin llamar a la API.
 ```json
 [
   {
-    "id": "48e659b9-ff0c-4f98-8145-da0b78f22076",
+    "id": "625c0797-41a0-4f6e-910a-e1cae25bcc42",
     "status": "created",
-    "createdAt": "2026-11-16T01:50:23.250Z",
+    "createdAt": "2026-11-16T02:40:16.039Z",
     "chatId": "demo-1",
-    "messageId": "-P6X20bJMeXPfhu6_oQs",
+    "messageId": "-P6XC_eAm1PObl2bjDVW",
     "product": {
-      "id": "p-101",
-      "name": "Bandeja paisa",
-      "price": 32000,
-      "currency": "COP",
-      "imageUrl": "https://placehold.co/96x96/e5e7eb/111?text=BP"
+      "id": "sr-contact",
+      "name": "Contact center omnicanal",
+      "price": 2100,
+      "currency": "USD",
+      "description": "Atención inbound en voz, chat y redes sociales",
+      "unit": "mes"
     }
   }
 ]
@@ -172,14 +206,21 @@ Ruta: `/chats/{chatId}/messages/{messageId}`.
   "sender": "comercio",
   "type": "product_offer",
   "status": "pending",
-  "product": { "id": "p-101", "name": "Bandeja paisa", "price": 32000, "currency": "COP", "imageUrl": "..." },
+  "product": {
+    "id": "sr-contact",
+    "name": "Contact center omnicanal",
+    "description": "Atención inbound en voz, chat y redes sociales",
+    "price": 2100,
+    "currency": "USD",
+    "unit": "mes"
+  },
   "createdAt": 1731024000000
 }
 ```
 
 El campo `id` **no se guarda**: la key que genera `push()` es el id, y el listener la inyecta al leer
-(`Object.entries(snapshot.val()).map(([id, m]) => ({ ...m, id }))`). Una sola fuente de verdad, sin
-duplicar el dato.
+(`Object.entries(snapshot.val()).map(([id, m]) => ({ ...m, id }))`). Una sola fuente de verdad, sin duplicar
+el dato.
 
 ---
 
@@ -190,29 +231,27 @@ api/src/orders/{orders.module.ts, controllers/, services/, dto/, interfaces/}
 app-comercio/src/chat/{pages/, components/, services/, interfaces/}
 app-comercio/src/products/{interfaces/, services/, components/}    (catálogo de servicios)
 app-cliente/src/chat/{screens/, components/, services/, interfaces/}
-app-cliente/src/orders/services/       (POST /orders desde el cliente)
+app-cliente/src/orders/services/                                   (POST /orders desde el cliente)
 ```
 
-Patrón `src/[entidad]/[componentes]` en las tres piezas: la entidad de la API es `orders`, la de las apps
-es `chat` y el comercio suma `products`.
+Patrón `src/[entidad]/[componentes]` en las tres piezas: la entidad de la API es `orders`, la de las apps es
+`chat` y el comercio suma `products`.
 
 ### Catálogo de servicios
 
 El comercio no manda un producto hardcodeado: el catálogo vive en
-`app-comercio/src/products/services/products.service.ts` con los servicios de Esmassiva (pre venta, venta
-outbound con base propia, retención y fidelización, ventas cruzadas y contact center omnicanal). El header del
-chat tiene un selector para elegir cuál se ofrece y el precio se muestra con su periodicidad (`1450 USD / mes`).
-
-Para agregar o cambiar un servicio alcanza con editar `PRODUCTS`: nada más depende de esa lista. La app cliente
-no tiene catálogo, solo recibe el objeto dentro del mensaje.
+`app-comercio/src/products/services/products.service.ts` con los servicios de Esmassiva. El header del chat
+tiene un selector para elegir cuál se ofrece y la tarjeta muestra el precio con su periodicidad
+(`2100 USD / mes`). Para agregar o cambiar un servicio alcanza con editar `PRODUCTS`: nada más depende de esa
+lista. La app cliente no tiene catálogo, solo recibe el objeto dentro del mensaje.
 
 ---
 
 ## Extras implementados
 
 - Mismo `chatId` configurable por variable de entorno en las tres piezas.
-- Anti doble respuesta: los botones se deshabilitan mientras la petición está en vuelo y se ignora
-  cualquier oferta que ya no esté `pending`.
+- Anti doble respuesta: los botones se deshabilitan mientras la petición está en vuelo y se ignora cualquier
+  oferta que ya no esté `pending`.
 - Mensaje `order_accepted` como confirmación en el chat.
 - `product.price > 0` validado en la API.
 - Tests de `orders.service.ts` y `chat.service.ts`.
@@ -222,9 +261,11 @@ no tiene catálogo, solo recibe el objeto dentro del mensaje.
 
 ## Notas de implementación
 
-- En `app-cliente`, `ProductOfferCard` recibe `onAnswer` y `answering`: el componente no sabe llamar a la
-  API, solo avisa. La lógica vive en `ChatScreen`.
+- En `app-cliente`, `ProductOfferCard` recibe `onAnswer` y `answering`: el componente no sabe llamar a la API,
+  solo avisa. La lógica vive en `ChatScreen`.
 - `listenMessages` devuelve la función de desuscripción que entrega `onValue`. Sin ese `return` en el
   `useEffect`, React StrictMode monta dos listeners en desarrollo y cada mensaje aparece duplicado.
-- La API guarda en archivo, no en base de datos: cada `POST` reescribe `orders.json` completo. Alcanza para
-  la prueba; con escrituras concurrentes haría falta una DB o una cola.
+- La API guarda en archivo, no en base de datos: cada `POST` reescribe `orders.json` completo. Alcanza para la
+  prueba; con escrituras concurrentes haría falta una DB o una cola.
+- La fecha de cada mensaje es un epoch en milisegundos (`createdAt`) y el orden de la lista sale de ahí, no del
+  orden en que Firebase devuelve las keys.
