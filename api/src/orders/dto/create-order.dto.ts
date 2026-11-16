@@ -25,6 +25,15 @@ export class ProductDto {
   @IsNotEmpty()
   currency: string;
 
+  // opcionales: se guardan tal cual vinieron en la oferta
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  unit?: string;
+
   @IsOptional()
   @IsString()
   imageUrl?: string;
