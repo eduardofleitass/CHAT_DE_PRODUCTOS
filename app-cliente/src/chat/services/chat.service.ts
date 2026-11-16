@@ -1,32 +1,54 @@
-import type { ChatMessage, Product } from '../interfaces/chat-message.interface';
+import { onValue, push, ref, update } from 'firebase/database';
+import { db } from '../../config/firebase';
+import type { ChatMessage } from '../interfaces/chat-message.interface';
 
-// FASE 3. Ruta en Firebase: chats/{chatId}/messages/{messageId}
-// Necesitás: onValue, push, ref, update de 'firebase/database' y { db } de '../../config/firebase'.
+// chats/{chatId}/messages/{messageId}
+const messagesRef = (chatId: string) => ref(db, `chats/${chatId}/messages`);
 
+// Devuelve la desuscripción: sin eso, StrictMode deja dos listeners pegados.
 export function listenMessages(
-  _chatId: string,
-  _onMessages: (messages: ChatMessage[]) => void,
+  chatId: string,
+  onMessages: (messages: ChatMessage[]) => void,
 ): () => void {
-  throw new Error('listenMessages: pendiente (fase 3)');
+  return onValue(
+    messagesRef(chatId),
+    (snapshot) => {
+      const value = (snapshot.val() ?? {}) as Record<string, Omit<ChatMessage, 'id'>>;
+
+      onMessages(
+        Object.entries(value)
+          .map(([id, message]) => ({ ...message, id }))
+          .sort((a, b) => a.createdAt - b.createdAt),
+      );
+    },
+    (error) => console.error('listenMessages:', error.message),
+  );
 }
 
-// El cliente siempre manda sender: 'cliente'.
-export async function sendTextMessage(_chatId: string, _text: string): Promise<void> {
-  throw new Error('sendTextMessage: pendiente (fase 3)');
+export async function sendTextMessage(chatId: string, text: string): Promise<void> {
+  await push(messagesRef(chatId), {
+    sender: 'cliente',
+    type: 'text',
+    text: text.trim(),
+    createdAt: Date.now(),
+  });
 }
 
-// Solo el cliente cambia el status de una oferta.
+// Solo el cliente cambia el estado de una oferta.
 export async function updateOfferStatus(
-  _chatId: string,
-  _messageId: string,
-  _status: 'accepted' | 'rejected',
+  chatId: string,
+  messageId: string,
+  status: 'accepted' | 'rejected',
 ): Promise<void> {
-  throw new Error('updateOfferStatus: pendiente (fase 3)');
+  await update(ref(db, `chats/${chatId}/messages/${messageId}`), { status });
 }
 
-// Extra: mensaje order_accepted de confirmación tras aprobar.
-export async function sendOrderAccepted(_chatId: string, _text: string): Promise<void> {
-  throw new Error('sendOrderAccepted: pendiente (fase 4)');
+// Mensaje de confirmación que ve el comercio al aprobar (punto extra).
+export async function sendOrderAccepted(chatId: string, text: string): Promise<void> {
+  await push(messagesRef(chatId), {
+    sender: 'cliente',
+    type: 'order_accepted',
+    text,
+    createdAt: Date.now(),
+  });
 }
-
-export type { ChatMessage, Product };

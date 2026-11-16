@@ -181,7 +181,12 @@ sin recargar (mismo chatId = mismo chat, obvio, pero confirma el listener y de p
 
 ---
 
-## 6. Fase 3 — app-cliente (móvil)
+## 6. Fase 3 — app-cliente (móvil) — HECHA Y VERIFICADA
+
+> `chat.service.ts`, `orders.service.ts`, `ProductOfferCard` (con Aprobar/Rechazar), `MessageBubble` y
+> `ChatScreen` ya están escritos y probados punta a punta: aprobar desde la app cliente creó el pedido en
+> `api/orders.json`, puso la oferta en `accepted` en Firebase y publicó el mensaje `order_accepted`.
+> El anti-doble-respuesta está en `handleAnswer`: `if (message.status !== 'pending' || answering) return;`
 
 ```bash
 cd app-cliente
