@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import ChatScreen from './chat/screens/ChatScreen';
+import { colors } from './chat/theme';
 
 export default function App() {
   return (
@@ -12,5 +13,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: {
+    flex: 1,
+    // en el navegador el fondo gris enmarca la app; en el teléfono no se ve
+    backgroundColor: Platform.OS === 'web' ? colors.bg : colors.surface,
+  },
 });

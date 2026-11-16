@@ -141,7 +141,26 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: colors.surface, paddingTop: 48 },
+  page: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    paddingTop: 48,
+    // en el navegador se ve como un teléfono: estirada a 1900px parece un error
+    ...Platform.select({
+      web: {
+        maxWidth: 460,
+        width: '100%',
+        alignSelf: 'center',
+        marginVertical: 20,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: colors.line,
+        overflow: 'hidden',
+        boxShadow: '0 18px 40px rgba(16, 24, 40, 0.10)',
+      },
+      default: {},
+    }),
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
